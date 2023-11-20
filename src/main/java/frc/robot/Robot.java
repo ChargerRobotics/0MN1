@@ -23,21 +23,12 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void disabledInit() {}
-
-  @Override
-  public void disabledPeriodic() {}
-
-  @Override
   public void autonomousInit() {
-
+    robotContainer.getAutonomousCommand().schedule();
   }
 
   @Override
-  public void autonomousPeriodic() {}
-
-  @Override
-  public void teleopInit() {
-
+  public void autonomousExit() {
+    robotContainer.getAutonomousCommand().cancel();
   }
 }
