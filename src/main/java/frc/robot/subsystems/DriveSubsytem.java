@@ -18,4 +18,16 @@ public class DriveSubsytem<T extends MotorController> extends SubsystemBase {
   public void rotate(double power) {
     driveTrain.rotate(power);
   }
+
+  public void resetMotors() {
+    driveTrain.resetMotors();
+  }
+
+  public void updateMotors() {
+    driveTrain.updateMotors();
+  }
+
+  public OmniDriveTrain<T> getDriveTrain() {
+    return driveTrain;
+  }
 }

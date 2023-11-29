@@ -7,7 +7,6 @@ package frc.robot;
 import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj.motorcontrol.PWMVictorSPX;
 import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
@@ -21,28 +20,41 @@ public class RobotContainer {
           new MotorPair<>(new PWMVictorSPX(Ports.BACK_LEFT_MOTOR), new VictorSP(Ports.BACK_RIGHT_MOTOR))
   ));
   private final CommandJoystick joystick = new CommandJoystick(0);
+  private final Robot robot;
 
   private final Command autonomousCommand = Commands.runOnce(() -> {});
 
-  public RobotContainer() {
+  public RobotContainer(Robot robot) {
+    this.robot = robot;
+
     configureBindings();
+    configureSmartDashboard();
 
     driveSubsystem.setDefaultCommand(Commands.run(() -> {
-//      driveSubsystem.drive(-joystick.getRawAxis(2), joystick.getRawAxis(1));
-//      driveSubsystem.rotate(joystick.getTwist());
+      driveSubsystem.resetMotors();
+
+      double y = joystick.getY() + 0.05;
+      double x = joystick.getX();
+      if (Math.abs(y) <= 0.1) y = 0;
+      if (Math.abs(x) <= 0.1) x = 0;
+      driveSubsystem.drive(y * 0.5, x * 0.5);
+
+      double twist = joystick.getRawAxis(4);
+      if (Math.abs(twist) <= 0.15) twist = 0;
+      driveSubsystem.rotate(twist * 0.25);
+
+      driveSubsystem.updateMotors();
     }, driveSubsystem));
   }
 
   private void configureBindings() {
   }
 
-  public Command getAutonomousCommand() {
-    return autonomousCommand;
+  private void configureSmartDashboard() {
+    robot.getSmartDashboardManager().add(driveSubsystem.getDriveTrain());
   }
 
-  public void updateSmartDashboard() {
-    SmartDashboard.putNumber("x", joystick.getX());
-    SmartDashboard.putNumber("y", joystick.getY());
-    SmartDashboard.putNumber("twist", joystick.getTwist());
+  public Command getAutonomousCommand() {
+    return autonomousCommand;
   }
 }

@@ -6,20 +6,26 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.smartdashboard.SmartDashboardManager;
 
 public class Robot extends TimedRobot {
+  private final SmartDashboardManager smartDashboardManager = new SmartDashboardManager();
   private RobotContainer robotContainer;
+
+  public SmartDashboardManager getSmartDashboardManager() {
+    return smartDashboardManager;
+  }
 
   @Override
   public void robotInit() {
-    robotContainer = new RobotContainer();
+    robotContainer = new RobotContainer(this);
   }
 
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
-
-    robotContainer.updateSmartDashboard();
+    
+    smartDashboardManager.updateAll();
   }
 
   @Override
