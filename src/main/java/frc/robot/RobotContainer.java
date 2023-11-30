@@ -51,6 +51,7 @@ public class RobotContainer {
 
   private void configureSmartDashboard() {
     robot.getSmartDashboardManager().add(driveSubsystem.getDriveTrain());
+    robot.getSmartDashboardManager().add(intakeSubystem);
   }
 
   public Command getAutonomousCommand() {
