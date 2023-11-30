@@ -6,11 +6,13 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj.motorcontrol.PWMVictorSPX;
+import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.robot.subsystems.DriveSubsytem;
+import frc.robot.subsystems.IntakeSubystem;
 
 public class RobotContainer {
   private final DriveSubsytem<MotorController> driveSubsystem = new DriveSubsytem<>(new OmniDriveTrain<>(
@@ -19,6 +21,7 @@ public class RobotContainer {
           new MotorPair<>(new PWMVictorSPX(Ports.RIGHT_FRONT_MOTOR), new PWMVictorSPX(Ports.RIGHT_BACK_MOTOR)),
           new MotorPair<>(new PWMVictorSPX(Ports.BACK_LEFT_MOTOR), new VictorSP(Ports.BACK_RIGHT_MOTOR))
   ));
+  private final IntakeSubystem<Spark> intakeSubystem = new IntakeSubystem<>(new Spark(Ports.INTAKE_MOTOR));
   private final CommandJoystick joystick = new CommandJoystick(0);
   private final Robot robot;
 
@@ -31,23 +34,19 @@ public class RobotContainer {
     configureSmartDashboard();
 
     driveSubsystem.setDefaultCommand(Commands.run(() -> {
-      driveSubsystem.resetMotors();
-
       double y = joystick.getY() + 0.05;
       double x = joystick.getX();
       if (Math.abs(y) <= 0.1) y = 0;
       if (Math.abs(x) <= 0.1) x = 0;
-      driveSubsystem.drive(y * 0.5, x * 0.5);
-
       double twist = joystick.getRawAxis(4);
       if (Math.abs(twist) <= 0.15) twist = 0;
-      driveSubsystem.rotate(twist * 0.25);
 
-      driveSubsystem.updateMotors();
+      driveSubsystem.drive(y * 0.5, x * 0.5, twist * 0.25);
     }, driveSubsystem));
   }
 
   private void configureBindings() {
+    joystick.trigger().whileTrue(intakeSubystem.intakeCommand());
   }
 
   private void configureSmartDashboard() {

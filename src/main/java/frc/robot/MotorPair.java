@@ -11,8 +11,12 @@ public class MotorPair<T extends MotorController> {
     this.right = right;
   }
 
-  public void drive(double power) {
+  public void set(double power) {
     left.set(power);
     right.set(power);
+  }
+
+  public double get() {
+    return left.get();
   }
 }

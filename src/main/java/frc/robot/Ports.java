@@ -17,5 +17,7 @@ public final class Ports {
   public static final int BACK_LEFT_MOTOR = 7;
   public static final int BACK_RIGHT_MOTOR = 9;
 
+  public static final int INTAKE_MOTOR = 8;
+
   private Ports() {}
 }

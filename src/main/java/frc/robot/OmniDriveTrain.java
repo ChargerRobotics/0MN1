@@ -10,11 +10,6 @@ public class OmniDriveTrain<T extends MotorController> implements DashboardUpdat
   private final MotorPair<T> right;
   private final MotorPair<T> bottom;
 
-  private double leftPower = 0;
-  private double topPower = 0;
-  private double rightPower = 0;
-  private double bottomPower = 0;
-
   public OmniDriveTrain(MotorPair<T> left, MotorPair<T> top, MotorPair<T> right, MotorPair<T> bottom) {
     this.left = left;
     this.top = top;
@@ -22,40 +17,23 @@ public class OmniDriveTrain<T extends MotorController> implements DashboardUpdat
     this.bottom = bottom;
   }
 
-  public void drive(double forwardPower, double sidewaysPower) {
-    leftPower -= forwardPower;
-    rightPower += forwardPower;
+  public void drive(double forwardPower, double sidewaysPower, double rotatePower) {
+    double leftPower = -forwardPower + rotatePower;
+    double rightPower = forwardPower + rotatePower;
+    double topPower = sidewaysPower + rotatePower;
+    double bottomPower = -sidewaysPower + rotatePower;
 
-    topPower += sidewaysPower;
-    bottomPower -= sidewaysPower;
-  }
-
-  public void rotate(double power) {
-    leftPower += power;
-    rightPower += power;
-    topPower += power;
-    bottomPower += power;
-  }
-
-  public void resetMotors() {
-    leftPower = 0;
-    rightPower = 0;
-    topPower = 0;
-    bottomPower = 0;
-  }
-
-  public void updateMotors() {
-    right.drive(rightPower);
-    left.drive(leftPower);
-    top.drive(topPower);
-    bottom.drive(bottomPower);
+    left.set(leftPower);
+    right.set(rightPower);
+    top.set(topPower);
+    bottom.set(bottomPower);
   }
 
   @Override
   public void updateValues() {
-    SmartDashboard.putNumber("left power", leftPower);
-    SmartDashboard.putNumber("top power", topPower);
-    SmartDashboard.putNumber("right power", rightPower);
-    SmartDashboard.putNumber("bottom power", bottomPower);
+    SmartDashboard.putNumber("left power", left.get());
+    SmartDashboard.putNumber("top power", top.get());
+    SmartDashboard.putNumber("right power", right.get());
+    SmartDashboard.putNumber("bottom power", bottom.get());
   }
 }

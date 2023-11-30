@@ -11,20 +11,8 @@ public class DriveSubsytem<T extends MotorController> extends SubsystemBase {
     this.driveTrain = driveTrain;
   }
 
-  public void drive(double forwardPower, double sidewaysPower) {
-    driveTrain.drive(forwardPower, sidewaysPower);
-  }
-
-  public void rotate(double power) {
-    driveTrain.rotate(power);
-  }
-
-  public void resetMotors() {
-    driveTrain.resetMotors();
-  }
-
-  public void updateMotors() {
-    driveTrain.updateMotors();
+  public void drive(double forwardPower, double sidewaysPower, double rotatePower) {
+    driveTrain.drive(forwardPower, sidewaysPower, rotatePower);
   }
 
   public OmniDriveTrain<T> getDriveTrain() {
