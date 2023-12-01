@@ -10,15 +10,24 @@ public class MotorSubsystem<T extends MotorController> extends SubsystemBase imp
   private final String name;
   private final T motor;
   private final double speed;
+  private final double backwardsSpeed;
 
   public MotorSubsystem(String name, T motor, double speed) {
+    this(name, motor, speed, -speed);
+  }
+  public MotorSubsystem(String name, T motor, double speed, double backwardsSpeed) {
     this.name = name;
     this.motor = motor;
     this.speed = speed;
+    this.backwardsSpeed = backwardsSpeed;
   }
 
-  public Command runCommand() {
+  public Command forwardCommand() {
     return startEnd(() -> motor.set(speed), () -> motor.stopMotor());
+  }
+
+  public Command backwardsCommand() {
+    return startEnd(() -> motor.set(backwardsSpeed), () -> motor.stopMotor());
   }
 
   public T getMotor() {
