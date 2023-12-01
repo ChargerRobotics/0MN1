@@ -7,12 +7,13 @@ package frc.robot;
 import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj.motorcontrol.PWMVictorSPX;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
+import edu.wpi.first.wpilibj.motorcontrol.Talon;
 import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.robot.subsystems.DriveSubsytem;
-import frc.robot.subsystems.IntakeSubystem;
+import frc.robot.subsystems.MotorSubsystem;
 
 public class RobotContainer {
   private final DriveSubsytem<MotorController> driveSubsystem = new DriveSubsytem<>(new OmniDriveTrain<>(
@@ -21,11 +22,16 @@ public class RobotContainer {
           new MotorPair<>(new PWMVictorSPX(Ports.RIGHT_FRONT_MOTOR), new PWMVictorSPX(Ports.RIGHT_BACK_MOTOR)),
           new MotorPair<>(new PWMVictorSPX(Ports.BACK_LEFT_MOTOR), new VictorSP(Ports.BACK_RIGHT_MOTOR))
   ));
-  private final IntakeSubystem<Spark> intakeSubystem = new IntakeSubystem<>(new Spark(Ports.INTAKE_MOTOR));
+  private final MotorSubsystem<Spark> intakeSubystem = new MotorSubsystem<>("intake", new Spark(Ports.INTAKE_MOTOR), 1);
+  private final MotorSubsystem<Talon> outtakeSubsystem = new MotorSubsystem<>("outtake", new Talon(Ports.OUTTAKE_MOTOR), 0.5);
   private final CommandJoystick joystick = new CommandJoystick(0);
   private final Robot robot;
 
-  private final Command autonomousCommand = Commands.runOnce(() -> {});
+  private final Command autonomousCommand = Commands.sequence(
+    intakeSubystem.runCommand().withTimeout(1),
+    Commands.waitSeconds(1),
+    intakeSubystem.runCommand().withTimeout(0.5)
+  );
 
   public RobotContainer(Robot robot) {
     this.robot = robot;
@@ -46,12 +52,15 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    joystick.trigger().whileTrue(intakeSubystem.intakeCommand());
+    joystick.trigger().whileTrue(intakeSubystem.runCommand());
+
+    joystick.button(2).whileTrue(outtakeSubsystem.runCommand());
   }
 
   private void configureSmartDashboard() {
     robot.getSmartDashboardManager().add(driveSubsystem.getDriveTrain());
     robot.getSmartDashboardManager().add(intakeSubystem);
+    robot.getSmartDashboardManager().add(outtakeSubsystem);
   }
 
   public Command getAutonomousCommand() {
