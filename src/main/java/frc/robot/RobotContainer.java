@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import com.datasiqn.robotutils.controlcurve.ControlCurve;
+import com.datasiqn.robotutils.controlcurve.ControlCurves;
 import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj.motorcontrol.PWMVictorSPX;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
@@ -25,6 +27,12 @@ public class RobotContainer {
   private final MotorSubsystem<Spark> intakeSubsystem = new MotorSubsystem<>("intake", new Spark(Ports.INTAKE_MOTOR), 1);
   private final MotorSubsystem<Talon> outtakeSubsystem = new MotorSubsystem<>("outtake", new Talon(Ports.OUTTAKE_MOTOR), 0.75);
   private final CommandJoystick joystick = new CommandJoystick(0);
+  private final ControlCurve<?, ?> driveCurve = ControlCurves.linear()
+          .withDeadZone(0.1)
+          .build();
+  private final ControlCurve<?, ?> twistCurve = ControlCurves.linear()
+          .withDeadZone(0.15)
+          .build();
   private final Robot robot;
 
   private final Command autonomousCommand = Commands.sequence(
@@ -42,12 +50,9 @@ public class RobotContainer {
     driveSubsystem.setDefaultCommand(Commands.run(() -> {
       double y = joystick.getY() + 0.05;
       double x = joystick.getX();
-      if (Math.abs(y) <= 0.1) y = 0;
-      if (Math.abs(x) <= 0.1) x = 0;
       double twist = joystick.getRawAxis(4);
-      if (Math.abs(twist) <= 0.15) twist = 0;
 
-      driveSubsystem.drive(y * 0.5, x * 0.5, twist * 0.25);
+      driveSubsystem.drive(driveCurve.get(y) * 0.5, driveCurve.get(x) * 0.5, twistCurve.get(twist) * 0.25);
     }, driveSubsystem));
   }
 
