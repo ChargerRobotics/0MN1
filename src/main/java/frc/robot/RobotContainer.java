@@ -22,15 +22,15 @@ public class RobotContainer {
           new MotorPair<>(new PWMVictorSPX(Ports.RIGHT_FRONT_MOTOR), new PWMVictorSPX(Ports.RIGHT_BACK_MOTOR)),
           new MotorPair<>(new PWMVictorSPX(Ports.BACK_LEFT_MOTOR), new VictorSP(Ports.BACK_RIGHT_MOTOR))
   ));
-  private final MotorSubsystem<Spark> intakeSubystem = new MotorSubsystem<>("intake", new Spark(Ports.INTAKE_MOTOR), 1);
+  private final MotorSubsystem<Spark> intakeSubsystem = new MotorSubsystem<>("intake", new Spark(Ports.INTAKE_MOTOR), 1);
   private final MotorSubsystem<Talon> outtakeSubsystem = new MotorSubsystem<>("outtake", new Talon(Ports.OUTTAKE_MOTOR), 0.75);
   private final CommandJoystick joystick = new CommandJoystick(0);
   private final Robot robot;
 
   private final Command autonomousCommand = Commands.sequence(
-    intakeSubystem.forwardCommand().withTimeout(1),
+    intakeSubsystem.forwardCommand().withTimeout(1),
     Commands.waitSeconds(1),
-    intakeSubystem.forwardCommand().withTimeout(0.5)
+    intakeSubsystem.forwardCommand().withTimeout(0.5)
   );
 
   public RobotContainer(Robot robot) {
@@ -52,15 +52,15 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    joystick.trigger().whileTrue(intakeSubystem.forwardCommand());
-    joystick.button(3).whileTrue(intakeSubystem.backwardsCommand());
+    joystick.trigger().whileTrue(intakeSubsystem.forwardCommand());
+    joystick.button(3).whileTrue(intakeSubsystem.backwardsCommand());
 
     joystick.button(2).whileTrue(outtakeSubsystem.forwardCommand());
   }
 
   private void configureSmartDashboard() {
     robot.getSmartDashboardManager().add(driveSubsystem.getDriveTrain());
-    robot.getSmartDashboardManager().add(intakeSubystem);
+    robot.getSmartDashboardManager().add(intakeSubsystem);
     robot.getSmartDashboardManager().add(outtakeSubsystem);
   }
 
