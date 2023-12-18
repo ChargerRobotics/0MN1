@@ -5,6 +5,8 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
+import com.datasiqn.robotutils.controlcurve.ControlCurve;
+import com.datasiqn.robotutils.controlcurve.ControlCurves;
 import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj.motorcontrol.PWMVictorSPX;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
@@ -25,14 +27,21 @@ public class RobotContainer {
           new MotorPair<>(new PWMVictorSPX(Ports.BACK_LEFT_MOTOR), new VictorSP(Ports.BACK_RIGHT_MOTOR)),
           new ADIS16470_IMU()
   ));
-  private final MotorSubsystem<Spark> intakeSubystem = new MotorSubsystem<>("intake", new Spark(Ports.INTAKE_MOTOR), 1);
+  private final MotorSubsystem<Spark> intakeSubsystem = new MotorSubsystem<>("intake", new Spark(Ports.INTAKE_MOTOR), 1);
   private final MotorSubsystem<Talon> outtakeSubsystem = new MotorSubsystem<>("outtake", new Talon(Ports.OUTTAKE_MOTOR), 0.75);
   private final CommandJoystick joystick = new CommandJoystick(0);
+  private final ControlCurve driveCurve = ControlCurves.linear()
+          .withDeadZone(0.1)
+          .build();
+  private final ControlCurve twistCurve = ControlCurves.linear()
+          .withDeadZone(0.15)
+          .build();
   private final Robot robot;
 
   private final Command autonomousCommand = Commands.sequence(
-    Commands.startEnd(() -> driveSubsystem.drive(-0.5, 0, 0), () -> driveSubsystem.drive(0, 0, 0), driveSubsystem)
-        .withTimeout(1)
+    intakeSubsystem.forwardCommand().withTimeout(1),
+    Commands.waitSeconds(1),
+    intakeSubsystem.forwardCommand().withTimeout(0.5)
   );
 
   public RobotContainer(Robot robot) {
@@ -43,15 +52,14 @@ public class RobotContainer {
 
     driveSubsystem.setDefaultCommand(Commands.run(() -> {
       double twist = joystick.getRawAxis(4);
-      if (Math.abs(twist) <= 0.15) twist = 0;
 
-      driveSubsystem.drive(joystick.getMagnitude() * 0.5, joystick.getDirectionRadians(), twist * 0.25);
+      driveSubsystem.drive(driveCurve.get(joystick.getMagnitude()) * 0.5, joystick.getDirectionRadians(), twistCurve.get(twist) * 0.25);
     }, driveSubsystem));
   }
 
   private void configureBindings() {
-    joystick.trigger().whileTrue(intakeSubystem.forwardCommand());
-    joystick.button(3).whileTrue(intakeSubystem.backwardsCommand());
+    joystick.trigger().whileTrue(intakeSubsystem.forwardCommand());
+    joystick.button(3).whileTrue(intakeSubsystem.backwardsCommand());
 
     joystick.button(2).whileTrue(outtakeSubsystem.forwardCommand());
     joystick.button(4).whileTrue(outtakeSubsystem.backwardsCommand());
@@ -66,7 +74,7 @@ public class RobotContainer {
   private void configureSmartDashboard() {
     SmartDashboardManager manager = robot.getSmartDashboardManager();
     manager.add(driveSubsystem.getDriveTrain());
-    manager.add(intakeSubystem);
+    manager.add(intakeSubsystem);
     manager.add(outtakeSubsystem);
   }
 
