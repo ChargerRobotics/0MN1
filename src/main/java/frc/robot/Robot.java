@@ -32,6 +32,11 @@ public class Robot extends TimedRobot {
   }
 
   @Override
+  public void disabledExit() {
+    robotContainer.getDriveSubsystem().getDriveTrain().getGyro().reset();
+  }
+
+  @Override
   public void autonomousInit() {
     robotContainer.getAutonomousCommand().schedule();
   }

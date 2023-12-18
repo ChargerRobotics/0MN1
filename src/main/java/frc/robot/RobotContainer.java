@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.ADIS16470_IMU;
 import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj.motorcontrol.PWMVictorSPX;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
@@ -12,6 +13,7 @@ import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
+import frc.robot.smartdashboard.SmartDashboardManager;
 import frc.robot.subsystems.DriveSubsytem;
 import frc.robot.subsystems.MotorSubsystem;
 
@@ -20,7 +22,8 @@ public class RobotContainer {
           new MotorPair<>(new PWMVictorSPX(Ports.LEFT_FRONT_MOTOR), new PWMVictorSPX(Ports.LEFT_BACK_MOTOR)),
           new MotorPair<>(new PWMVictorSPX(Ports.FRONT_LEFT_MOTOR), new PWMVictorSPX(Ports.FRONT_RIGHT_MOTOR)),
           new MotorPair<>(new PWMVictorSPX(Ports.RIGHT_FRONT_MOTOR), new PWMVictorSPX(Ports.RIGHT_BACK_MOTOR)),
-          new MotorPair<>(new PWMVictorSPX(Ports.BACK_LEFT_MOTOR), new VictorSP(Ports.BACK_RIGHT_MOTOR))
+          new MotorPair<>(new PWMVictorSPX(Ports.BACK_LEFT_MOTOR), new VictorSP(Ports.BACK_RIGHT_MOTOR)),
+          new ADIS16470_IMU()
   ));
   private final MotorSubsystem<Spark> intakeSubystem = new MotorSubsystem<>("intake", new Spark(Ports.INTAKE_MOTOR), 1);
   private final MotorSubsystem<Talon> outtakeSubsystem = new MotorSubsystem<>("outtake", new Talon(Ports.OUTTAKE_MOTOR), 0.75);
@@ -28,9 +31,8 @@ public class RobotContainer {
   private final Robot robot;
 
   private final Command autonomousCommand = Commands.sequence(
-    intakeSubystem.forwardCommand().withTimeout(1),
-    Commands.waitSeconds(1),
-    intakeSubystem.forwardCommand().withTimeout(0.5)
+    Commands.startEnd(() -> driveSubsystem.drive(-0.5, 0, 0), () -> driveSubsystem.drive(0, 0, 0), driveSubsystem)
+        .withTimeout(1)
   );
 
   public RobotContainer(Robot robot) {
@@ -40,14 +42,10 @@ public class RobotContainer {
     configureSmartDashboard();
 
     driveSubsystem.setDefaultCommand(Commands.run(() -> {
-      double y = joystick.getY() + 0.05;
-      double x = joystick.getX();
-      if (Math.abs(y) <= 0.1) y = 0;
-      if (Math.abs(x) <= 0.1) x = 0;
       double twist = joystick.getRawAxis(4);
       if (Math.abs(twist) <= 0.15) twist = 0;
 
-      driveSubsystem.drive(y * 0.5, x * 0.5, twist * 0.25);
+      driveSubsystem.drive(joystick.getMagnitude() * 0.5, joystick.getDirectionRadians(), twist * 0.25);
     }, driveSubsystem));
   }
 
@@ -56,15 +54,27 @@ public class RobotContainer {
     joystick.button(3).whileTrue(intakeSubystem.backwardsCommand());
 
     joystick.button(2).whileTrue(outtakeSubsystem.forwardCommand());
+    joystick.button(4).whileTrue(outtakeSubsystem.backwardsCommand());
+
+    joystick.button(5).onTrue(Commands.runOnce(() -> {
+      ADIS16470_IMU gyro = driveSubsystem.getDriveTrain().getGyro();
+      gyro.reset();
+      gyro.calibrate();
+    }));
   }
 
   private void configureSmartDashboard() {
-    robot.getSmartDashboardManager().add(driveSubsystem.getDriveTrain());
-    robot.getSmartDashboardManager().add(intakeSubystem);
-    robot.getSmartDashboardManager().add(outtakeSubsystem);
+    SmartDashboardManager manager = robot.getSmartDashboardManager();
+    manager.add(driveSubsystem.getDriveTrain());
+    manager.add(intakeSubystem);
+    manager.add(outtakeSubsystem);
   }
 
   public Command getAutonomousCommand() {
     return autonomousCommand;
+  }
+
+  public DriveSubsytem<MotorController> getDriveSubsystem() {
+    return driveSubsystem;
   }
 }
